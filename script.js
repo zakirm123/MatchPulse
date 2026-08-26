@@ -1,3 +1,4 @@
+let allMatches = []; 
 // Sign up for a free token at football-data.org
 const API_TOKEN = 'YOUR_FOOTBALL_DATA_API_KEY_HERE'; 
 const PREMIER_LEAGUE_ID = 'PL'; // Standard code for Premier League on this platform
@@ -85,3 +86,18 @@ function injectMockData() {
 
 refreshBtn.addEventListener('click', fetchPLMatches);
 window.addEventListener('DOMContentLoaded', fetchPLMatches);
+const searchBar = document.getElementById('search-bar');
+
+searchBar.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    
+    // Filter the matches based on home or away team names
+    const filteredMatches = allMatches.filter(match => {
+        const homeName = match.homeTeam.name.toLowerCase();
+        const awayName = match.awayTeam.name.toLowerCase();
+        return homeName.includes(searchTerm) || awayName.includes(searchTerm);
+    });
+    
+    // Re-render only the matched cards
+    renderMatches(filteredMatches);
+});
