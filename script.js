@@ -1,9 +1,11 @@
-// Using TheSportsDB English Premier League (League ID: 4328)
 const API_URL = 'https://thesportsdb.com';
 const fixturesContainer = document.getElementById('pl-fixtures');
+const refreshBtn = document.getElementById('refresh-btn');
 
 async function getPLFixtures() {
     try {
+        fixturesContainer.innerHTML = '<p class="loading">Updating latest matches...</p>';
+        
         const response = await fetch(API_URL);
         const data = await response.json();
         
@@ -14,13 +16,17 @@ async function getPLFixtures() {
             return;
         }
 
+        // Beautiful structural placement for update tracking timestamp text
+        const now = new Date();
+        const timeStamp = document.createElement('div');
+        timeStamp.className = 'timestamp-msg';
+        timeStamp.innerHTML = `🔄 Connected Live • Updated at: <strong>${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})}</strong>`;
+        fixturesContainer.appendChild(timeStamp);
+
         data.events.forEach(match => {
             const card = document.createElement('div');
-            card.classList.add('match-card');
+            card.className = 'match-card';
             
-            // Allow users to click the card to watch video highlights/recaps
-            card.setAttribute('title', 'Click to watch match video');
-
             const homeScore = match.intHomeScore !== null ? match.intHomeScore : '0';
             const awayScore = match.intAwayScore !== null ? match.intAwayScore : '0';
             
@@ -30,12 +36,10 @@ async function getPLFixtures() {
             let statusText = formattedTime;
             let liveStatusClass = '';
 
-            // Check match states
             if (match.strStatus === 'Match Finished' || match.strStatus === 'FT') {
-                statusText = 'FT (Watch Video)';
-                liveStatusClass = 'video-available';
+                statusText = 'FT';
             } else if (match.strStatus === 'In Progress' || match.strInProgress === 'true') {
-                statusText = '🔴 LIVE (Watch Recaps)';
+                statusText = '🔴 LIVE';
                 liveStatusClass = 'live-pulse';
             }
 
@@ -52,61 +56,16 @@ async function getPLFixtures() {
                 </div>
             `;
             
-            // CLICK TRIGGER: Opens the video player when clicked
-            card.addEventListener('click', () => {
-                // The API provides an official YouTube highlight/recap video link if available
-                // If the link isn't ready yet, it falls back to the official Sky Sports / NBC Premier League channel
-                const videoUrl = match.strVideo || `https://youtube.com{encodeURIComponent(match.strEvent + ' highlights')}`;
-                openVideoModal(videoUrl, match.strEvent);
-            });
-
             fixturesContainer.appendChild(card);
         });
-
     } catch (error) {
-        console.error("Error loading data:", error);
+        console.error(error);
+        fixturesContainer.innerHTML = '<p style="color:#ff0055; text-align:center;">Network error fetching live updates.</p>';
     }
 }
 
-// Function to generate the pop-up video player component
-function openVideoModal(url, matchTitle) {
-    // Convert regular YouTube link to embed format so it plays directly inside your site
-    let embedUrl = url;
-    if (url.includes('youtube.com/watch?v=')) {
-        const videoId = url.split('v=')[1].split('&')[0];
-        embedUrl = `https://youtube.com{videoId}?autoplay=1`;
-    } else if (url.includes('youtu.be/')) {
-        const videoId = url.split('youtu.be/')[1].split('?')[0];
-        embedUrl = `https://youtube.com{videoId}?autoplay=1`;
-    } else {
-        // Fallback if it's a search page query link
-        window.open(url, '_blank');
-        return;
-    }
+// Hook up your button click action listener safely
+refreshBtn.addEventListener('click', getPLFixtures);
 
-    // Create the overlay elements dynamically
-    const overlay = document.createElement('div');
-    overlay.className = 'video-overlay';
-    
-    overlay.innerHTML = `
-        <div class="video-modal">
-            <div class="modal-header">
-                <h3>${matchTitle}</h3>
-                <button class="close-btn">&times;</button>
-            </div>
-            <div class="video-wrapper">
-                <iframe src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(overlay);
-
-    // Close video layout when clicking 'X' or outside the box
-    overlay.querySelector('.close-btn').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) overlay.remove();
-    });
-}
-
+// Initial bootstrap trigger sequence loader
 getPLFixtures();
