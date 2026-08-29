@@ -1,74 +1,175 @@
-/* Make cards look clickable */
-.match-card {
-    cursor: pointer;
+/* Reset defaults and set up dark futuristic theme */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-.video-available {
-    color: #00ff87 !important;
-    text-decoration: underline;
-}
-
-/* Fullscreen Background Darkener */
-.video-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85);
+body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    background-color: #0b0214; /* Super deep purple-black */
+    color: #ffffff;
+    line-height: 1.6;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-/* The Central Video Box Window */
-.video-modal {
-    background: #1b0c2c;
-    width: 90%;
-    max-width: 700px;
-    border-radius: 12px;
-    border: 2px solid #3d195d;
-    overflow: hidden;
+/* Header Banner styling */
+header {
+    background: linear-gradient(135deg, #3d195d 0%, #240b3b 100%); /* PL Purple Gradient */
+    padding: 30px 20px;
+    text-align: center;
+    border-bottom: 4px solid #00ff87; /* Neon green accent line */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-.modal-header {
+header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+header p {
+    color: #00ff87;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    letter-spacing: 2px;
+}
+
+/* Layout container centering your page */
+.container {
+    max-width: 800px;
+    width: 100%;
+    margin: 40px auto;
+    padding: 0 20px;
+    flex: 1;
+}
+
+.controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
-    background: #3d195d;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #240b3b;
+    padding-bottom: 15px;
 }
 
-.modal-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
+h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
 }
 
-.close-btn {
-    background: none;
-    border: none;
+/* Premium styled glassmorphic button */
+.modern-btn {
+    background-color: #3d195d;
     color: #ffffff;
-    font-size: 1.8rem;
+    border: 1px solid #00ff87;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 30px;
     cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0, 255, 135, 0.1);
 }
 
-.close-btn:hover {
-    color: #ff0055;
+.modern-btn:hover {
+    background-color: #00ff87;
+    color: #3d195d;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 255, 135, 0.3);
 }
 
-/* Maintain a 16:9 Aspect Ratio Box for the Video Player */
-.video-wrapper {
-    position: relative;
-    padding-bottom: 56.25%; /* 16:9 ratio */
-    height: 0;
+/* Beautiful custom match score cards */
+.match-card {
+    background: rgba(27, 12, 44, 0.6);
+    border: 1px solid rgba(61, 25, 93, 0.5);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.video-wrapper iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
+.match-card:hover {
+    transform: translateY(-4px);
+    border-color: #00ff87;
+    background: rgba(36, 11, 59, 0.8);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.team-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.team-name {
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: -0.3px;
+}
+
+/* Score digital board badge layout */
+.center-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 0 15px;
+}
+
+.score {
+    background: #3d195d;
+    color: #00ff87;
+    font-size: 2rem;
+    font-weight: 800;
+    padding: 6px 20px;
+    border-radius: 10px;
+    min-width: 80px;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+}
+
+.time-status {
+    font-size: 0.8rem;
+    color: #a393b3;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Live glowing animation */
+.live-pulse {
+    color: #ff0055 !important;
+    animation: pulseGlow 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.98); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.loading, .timestamp-msg {
+    text-align: center;
+    color: #a393b3;
+    font-style: italic;
+    margin-bottom: 15px;
+}
+
+/* Clean design footer */
+footer {
+    text-align: center;
+    padding: 25px;
+    background-color: #06010c;
+    color: #534366;
+    font-size: 0.85rem;
+    border-top: 1px solid #1b0c2c;
 }
