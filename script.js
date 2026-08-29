@@ -1,103 +1,112 @@
-let allMatches = []; 
-// Sign up for a free token at football-data.org
-const API_TOKEN = 'YOUR_FOOTBALL_DATA_API_KEY_HERE'; 
-const PREMIER_LEAGUE_ID = 'PL'; // Standard code for Premier League on this platform
-const API_URL = `https://football-data.org{PREMIER_LEAGUE_ID}/matches`;
+// Using TheSportsDB English Premier League (League ID: 4328)
+const API_URL = 'https://thesportsdb.com';
+const fixturesContainer = document.getElementById('pl-fixtures');
 
-const matchContainer = document.getElementById('match-container');
-const refreshBtn = document.getElementById('refresh-btn');
-
-async function fetchPLMatches() {
-    matchContainer.innerHTML = '<div class="loading">Loading Premier League Matchday...</div>';
-    
+async function getPLFixtures() {
     try {
-        const response = await fetch(API_URL, {
-            method: 'GET',
-            headers: {
-                'X-Auth-Token': API_TOKEN
-            }
-        });
-        
-        if (!response.ok) throw new Error('API request failed');
-        
+        const response = await fetch(API_URL);
         const data = await response.json();
-        // Filtering to show matches from the current active matchday
-        renderMatches(data.matches);
         
+        fixturesContainer.innerHTML = ''; 
+
+        if (!data.events || data.events.length === 0) {
+            fixturesContainer.innerHTML = '<p class="loading">No matches scheduled at the moment.</p>';
+            return;
+        }
+
+        data.events.forEach(match => {
+            const card = document.createElement('div');
+            card.classList.add('match-card');
+            
+            // Allow users to click the card to watch video highlights/recaps
+            card.setAttribute('title', 'Click to watch match video');
+
+            const homeScore = match.intHomeScore !== null ? match.intHomeScore : '0';
+            const awayScore = match.intAwayScore !== null ? match.intAwayScore : '0';
+            
+            const matchDate = new Date(match.dateEvent + 'T' + match.strTime);
+            const formattedTime = matchDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            let statusText = formattedTime;
+            let liveStatusClass = '';
+
+            // Check match states
+            if (match.strStatus === 'Match Finished' || match.strStatus === 'FT') {
+                statusText = 'FT (Watch Video)';
+                liveStatusClass = 'video-available';
+            } else if (match.strStatus === 'In Progress' || match.strInProgress === 'true') {
+                statusText = '🔴 LIVE (Watch Recaps)';
+                liveStatusClass = 'live-pulse';
+            }
+
+            card.innerHTML = `
+                <div class="team-box">
+                    <span class="team-name">${match.strHomeTeam}</span>
+                </div>
+                <div class="center-box">
+                    <div class="score">${homeScore} : ${awayScore}</div>
+                    <div class="time-status ${liveStatusClass}">${statusText}</div>
+                </div>
+                <div class="team-box">
+                    <span class="team-name">${match.strAwayTeam}</span>
+                </div>
+            `;
+            
+            // CLICK TRIGGER: Opens the video player when clicked
+            card.addEventListener('click', () => {
+                // The API provides an official YouTube highlight/recap video link if available
+                // If the link isn't ready yet, it falls back to the official Sky Sports / NBC Premier League channel
+                const videoUrl = match.strVideo || `https://youtube.com{encodeURIComponent(match.strEvent + ' highlights')}`;
+                openVideoModal(videoUrl, match.strEvent);
+            });
+
+            fixturesContainer.appendChild(card);
+        });
+
     } catch (error) {
-        matchContainer.innerHTML = '<div class="error">Unable to sync live Premier League data. Displaying standby slate...</div>';
-        console.error(error);
-        injectMockData(); // Safeguard to prevent an empty screen while testing
+        console.error("Error loading data:", error);
     }
 }
 
-function renderMatches(matches) {
-    matchContainer.innerHTML = '';
-    
-    if (!matches || matches.length === 0) {
-        matchContainer.innerHTML = '<div class="no-matches">No Premier League matches scheduled for today.</div>';
+// Function to generate the pop-up video player component
+function openVideoModal(url, matchTitle) {
+    // Convert regular YouTube link to embed format so it plays directly inside your site
+    let embedUrl = url;
+    if (url.includes('youtube.com/watch?v=')) {
+        const videoId = url.split('v=')[1].split('&')[0];
+        embedUrl = `https://youtube.com{videoId}?autoplay=1`;
+    } else if (url.includes('youtu.be/')) {
+        const videoId = url.split('youtu.be/')[1].split('?')[0];
+        embedUrl = `https://youtube.com{videoId}?autoplay=1`;
+    } else {
+        // Fallback if it's a search page query link
+        window.open(url, '_blank');
         return;
     }
 
-    matches.forEach(match => {
-        const card = document.createElement('div');
-        card.className = 'match-card';
-        
-        const homeTeam = match.homeTeam.name;
-        const awayTeam = match.awayTeam.name;
-        const homeScore = match.score.fullTime.home !== null ? match.score.fullTime.home : '-';
-        const awayScore = match.score.fullTime.away !== null ? match.score.fullTime.away : '-';
-        
-        // Status cleanups (IN_PLAY, TIMED, FINISHED)
-        let statusText = match.status.replace('_', ' ');
-        const isLive = match.status === 'IN_PLAY' || match.status === 'PAUSED';
+    // Create the overlay elements dynamically
+    const overlay = document.createElement('div');
+    overlay.className = 'video-overlay';
+    
+    overlay.innerHTML = `
+        <div class="video-modal">
+            <div class="modal-header">
+                <h3>${matchTitle}</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="video-wrapper">
+                <iframe src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+        </div>
+    `;
 
-        card.innerHTML = `
-            <div class="league">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</div>
-            <div class="teams-container">
-                <div class="team-row">
-                    <span>${homeTeam}</span>
-                    <span class="score">${homeScore}</span>
-                </div>
-                <div class="team-row">
-                    <span>${awayTeam}</span>
-                    <span class="score">${awayScore}</span>
-                </div>
-            </div>
-            <div class="match-status">
-                <span>${statusText}</span>
-                ${isLive ? `<span class="live">⏱️ LIVE</span>` : ''}
-            </div>
-        `;
-        
-        matchContainer.appendChild(card);
+    document.body.appendChild(overlay);
+
+    // Close video layout when clicking 'X' or outside the box
+    overlay.querySelector('.close-btn').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
     });
 }
 
-// Automatic testing fallback if you haven't dropped your API key in yet
-function injectMockData() {
-    const fallbackData = [
-        { homeTeam: { name: "Arsenal" }, awayTeam: { name: "Chelsea" }, score: { fullTime: { home: 3, away: 2 } }, status: "FINISHED" },
-        { homeTeam: { name: "Manchester City" }, awayTeam: { name: "Liverpool" }, score: { fullTime: { home: 1, away: 1 } }, status: "IN_PLAY" },
-        { homeTeam: { name: "Tottenham Hotspur" }, awayTeam: { name: "Manchester United" }, score: { fullTime: { home: null, away: null } }, status: "TIMED" }
-    ];
-    renderMatches(fallbackData);
-}
-
-refreshBtn.addEventListener('click', fetchPLMatches);
-window.addEventListener('DOMContentLoaded', fetchPLMatches);
-const searchBar = document.getElementById('search-bar');
-
-searchBar.addEventListener('input', (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    
-    // Filter the matches based on home or away team names
-    const filteredMatches = allMatches.filter(match => {
-        const homeName = match.homeTeam.name.toLowerCase();
-        const awayName = match.awayTeam.name.toLowerCase();
-        return homeName.includes(searchTerm) || awayName.includes(searchTerm);
-    });
-    
-    // Re-render only the matched cards
-    renderMatches(filteredMatches);
-});
+getPLFixtures();
