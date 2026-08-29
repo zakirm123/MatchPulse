@@ -3,30 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SportWire - Live Matches</title>
+    <title>MatchPulse - Premier League</title>
+    <!-- CRITICAL: Make sure this file name matches your CSS file exactly -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <h1>🏆 MatchPulse</h1>
-        <p>Live Match Dashboard</p>
+        <div class="header-content">
+            <h1>🏆 MatchPulse</h1>
+            <p>Live Premier League Hub</p>
+        </div>
     </header>
+    
+    <main class="container">
+        <div class="controls">
+            <h2>Live Match Dashboard</h2>
+            <button id="refresh-btn" class="modern-btn">🔄 Refresh Scores</button>
+        </div>
 
-    <main>
-        <section class="controls">
-            <button id="refresh-btn">🔄 Refresh Scores</button>
-        </section>
-
-        <!-- Match cards will load inside this container -->
-        <div id="match-container" class="match-grid">
-            <div class="loading">Loading live matches...</div>
+        <!-- This ID must match your JavaScript querySelector exactly -->
+        <div id="pl-fixtures">
+            <p class="loading">Loading live matches...</p>
         </div>
     </main>
 
     <footer>
-        <p>&copy; 2026 Match Pulse. Made by Zakir.</p>
+        <p>&copy; 2026 MatchPulse. Made by Zakir.</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
